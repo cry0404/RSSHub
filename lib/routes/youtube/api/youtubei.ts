@@ -2,6 +2,7 @@ import cache from '@/utils/cache';
 import { Innertube } from 'youtubei.js';
 import utils, { getVideoUrl } from '../utils';
 import { Data } from '@/types';
+import { parseRelativeDate } from '@/utils/parse-date';
 
 const innertubePromise = Innertube.create();
 
@@ -31,7 +32,7 @@ export const getDataByChannelId = async ({ channelId, embed }: { channelId: stri
         item: videos.videos
             .filter((video) => 'video_id' in video)
             .map((video) => {
-                const img = 'thumbnail' in video ? video.thumbnail?.[0].url : undefined;
+                const img = 'best_thumbnail' in video ? video.best_thumbnail?.url : ('thumbnails' in video ? video.thumbnails?.[0]?.url : undefined);
 
                 return {
                     title: video.title.text || `YouTube Video ${video.video_id}`,
@@ -39,10 +40,56 @@ export const getDataByChannelId = async ({ channelId, embed }: { channelId: stri
                     link: `https://www.youtube.com/watch?v=${video.video_id}`,
                     author: typeof video.author === 'string' ? video.author : (video.author.name === 'N/A' ? undefined : video.author.name),
                     image: img,
+                    pubDate: 'published' in video && video.published?.text ? parseRelativeDate(video.published.text) : undefined,
                     attachments: [
                         {
                             url: getVideoUrl(video.video_id),
                             mime_type: 'text/html',
+                            duration_in_seconds: video.duration && 'seconds' in video.duration ? video.duration.seconds : undefined,
+                        },
+                    ],
+                };
+            }),
+    };
+};
+
+export const getDataByPlaylistId = async ({ playlistId, embed }: { playlistId: string; embed: boolean }): Promise<Data> => {
+    const innertube = await innertubePromise;
+    const playlist = await innertube.getPlaylist(playlistId);
+    const videos = await playlist.videos;
+
+    return {
+        title: `${playlist.info.title || playlistId} by ${playlist.info.author.name} - YouTube`,
+        link: `https://www.youtube.com/playlist?list=${playlistId}`,
+        image: playlist.info.thumbnails?.[0].url,
+        description: playlist.info.description || `${playlist.info.title} by ${playlist.info.author.name}`,
+
+        item: videos
+            .filter((video) => 'id' in video)
+            .map((video) => {
+                const img = 'best_thumbnail' in video ? video.best_thumbnail?.url : video.thumbnails?.[0]?.url;
+
+                return {
+                    title: video.title.text || `YouTube Video ${video.id}`,
+                    description: utils.renderDescription(embed, video.id, img, ''),
+                    link: `https://www.youtube.com/watch?v=${video.id}`,
+                    pubDate: 'published' in video && video.published?.text ? parseRelativeDate(video.published.text) : undefined,
+                    author:
+                        'author' in video
+                            ? [
+                                  {
+                                      name: video.author.name,
+                                      url: video.author.url,
+                                      avatar: video.author.thumbnails?.[0]?.url,
+                                  },
+                              ]
+                            : undefined,
+                    image: img,
+                    attachments: [
+                        {
+                            url: getVideoUrl(video.id),
+                            mime_type: 'text/html',
+                            duration_in_seconds: 'duration' in video && video.duration && 'seconds' in video.duration ? video.duration.seconds : undefined,
                         },
                     ],
                 };
