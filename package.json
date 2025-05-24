@@ -194,7 +194,7 @@
         "prettier": "3.5.3",
         "remark-parse": "11.0.0",
         "supertest": "7.1.1",
-        "tsdown": "0.10.2",
+        "tsdown": "0.12.2",
         "typescript": "5.8.3",
         "unified": "11.0.5",
         "vite-tsconfig-paths": "5.1.4",
@@ -228,7 +228,12 @@
             "side-channel": "npm:@nolyfill/side-channel@^1"
         },
         "patchedDependencies": {
-            "eslint-nibble@8.1.0": "patches/eslint-nibble@8.1.0.patch"
+            "eslint-nibble@8.1.0": "patches/eslint-nibble@8.1.0.patch",
+            "@bbob/preset-html5@4.2.0": "patches/@bbob__preset-html5@4.2.0.patch",
+            "@bbob/core@4.2.0": "patches/@bbob__core@4.2.0.patch",
+            "@bbob/plugin-helper@4.2.0": "patches/@bbob__plugin-helper@4.2.0.patch",
+            "@bbob/preset@4.2.0": "patches/@bbob__preset@4.2.0.patch",
+            "@bbob/parser@4.2.0": "patches/@bbob__parser@4.2.0.patch"
         }
     }
 }
